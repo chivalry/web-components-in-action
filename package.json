@@ -1,0 +1,6 @@
+{
+  "dependencies": {
+    "csshake": "^1.5.3",
+    "xmlhttprequest": "^1.8.0"
+  }
+}

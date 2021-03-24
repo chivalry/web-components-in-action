@@ -1,0 +1,103 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <title>Google Poly Search</title>
+    <script>
+        class PolySearch extends HTMLElement {
+            static get observedAttributes() {
+                return ['searchterm'];
+            }
+
+            connectedCallback() {
+                if (this.hasAttribute('thumbheight')) {
+                    this._thumbheight = this.getAttribute('thumbheight');
+                    this._thumbwidth = (this.getAttribute('thumbheight') * 1.3333);
+                } else {
+                    this._thumbheight = 150;
+                    this._thumbwidth = 200;
+                }
+                if (this.hasAttribute('backgroundcolor')) {
+                    this.style.backgroundColor = this.getAttribute('backgroundcolor');
+                }
+            }
+
+            attributeChangedCallback(name, oldval, newval) {
+                console.log('changed');
+                if (name === 'searchterm') {
+                    this.doSearch();
+                }
+            }
+
+            get searchTerm() {
+                return this.getAttribute('searchterm');
+            }
+
+            set searchTerm(value) {
+                this.setAttribute('searchterm', value);
+            }
+
+            doSearch() {
+                const key = this.getAttribute('apiKey');
+                const term = this.getAttribute('searchTerm');
+                if (key && term) {
+                    const url = this.getAttribute('baseuri')
+                        + `?keywords=${term}`
+                        + `&format=${this.getAttribute('format')}`
+                        + `&key=${key}`;
+                    const request = new XMLHttpRequest();
+                    request.open('GET', url, true);
+                    request.addEventListener('load', (event) => {
+                        this.renderResults(JSON.parse(event.target.response).assets);
+                    });
+                    request.send();
+                }
+            }
+
+            renderResults(assets) {
+                let html = '';
+                for (const asset of assets) {
+                    html += `<img src="${asset.thumbnail.url}"
+                                  width="${this._thumbwidth}"
+                                  height="${this._thumbheight}" />`;
+                }
+                this.innerHTML = html;
+            }
+        }
+
+        customElements.define('poly-search', PolySearch);
+    </script>
+    <style>
+        poly-search {
+            border-style: solid;
+            border-width: 1px;
+            border-color: #9a9a9a;
+            padding: 10px;
+            background-color: #fafafa;
+            display: inline-block;
+            text-align: center;
+        }
+
+        poly-search img {
+            margin: 5px;
+        }
+    </style>
+</head>
+<body>
+    <label>Enter search term:</label>
+    <input type="text" onchange="updatePolySearch(event)" />
+    <br /><br />
+
+    <script>
+        function updatePolySearch(event) {
+            document.querySelector('poly-search').setAttribute('searchterm', event.target.value);
+        }
+    </script>
+    <poly-search apikey="AIzaSyAnQ_buzEKwPdWQbOQ9vhlGBSXMg-K7HPg"
+                 format="OBJ"
+                 backgroundcolor="red"
+                 baseuri="https://poly.googleapis.com/v1/assets"
+                 searchterm="parrot">
+    </poly-search>
+</body>
+</html>
